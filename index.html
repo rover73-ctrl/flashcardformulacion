@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>300 Flashcards con Voz: Formulación y Evaluación de Proyectos</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --text-soft: #555;
+    --primary: #4a5bf7;
+    --primary-soft: #e6e9ff;
+    --border: #e0e3ef;
+    --shadow: rgba(0,0,0,0.08);
+    --back-bg: #4a5bf7;
+    --back-text: #ffffff;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --voice: #8b5cf6;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1120;
+    --card-bg: #1a1d33;
+    --text: #e8eaf6;
+    --text-soft: #9aa0c0;
+    --primary: #7b8bff;
+    --primary-soft: #23264a;
+    --border: #2a2e4d;
+    --shadow: rgba(0,0,0,0.4);
+    --back-bg: #3a4bd8;
+    --back-text: #ffffff;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --voice: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  header {
+    max-width: 1300px;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  h1 {
+    font-size: 1.3rem;
+    background: linear-gradient(90deg, var(--primary), #9b6bff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .theme-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .theme-toggle:hover { transform: translateY(-2px); }
+
+  .voice-panel {
+    max-width: 1300px;
+    margin: 0 auto 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .voice-panel label {
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+  .voice-panel select,
+  .voice-panel input[type="range"] {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    outline: none;
+  }
+  .voice-panel input[type="range"] { width: 110px; padding: 0; }
+  .voice-panel .speed-val {
+    min-width: 42px;
+    text-align: center;
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .toggle-auto {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .toggle-auto input { cursor: pointer; }
+
+  .toolbar {
+    max-width: 1300px;
+    margin: 0 auto 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 220px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .search-box:focus { border-color: var(--primary); }
+  .btn-action {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .btn-action:hover { border-color: var(--primary); color: var(--primary); }
+
+  .categories {
+    max-width: 1300px;
+    margin: 0 auto 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cat-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .cat-btn:hover { border-color: var(--primary); }
+  .cat-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .progress-bar {
+    max-width: 1300px;
+    margin: 0 auto 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+  }
+  .progress-track {
+    flex: 1;
+    min-width: 150px;
+    height: 10px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #9b6bff);
+    width: 0%;
+    transition: width 0.4s;
+  }
+
+  .stats {
+    max-width: 1300px;
+    margin: 0 auto 16px;
+    color: var(--text-soft);
+    font-size: 0.88rem;
+  }
+
+  .grid {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 18px;
+  }
+
+  .flashcard {
+    perspective: 1200px;
+    height: 260px;
+    cursor: pointer;
+    position: relative;
+  }
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  .flashcard.flipped .flashcard-inner {
+    transform: rotateY(180deg);
+  }
+  .flashcard-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    padding: 20px 20px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 4px 16px var(--shadow);
+    overflow: auto;
+  }
+  .flashcard-front {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+  }
+  .flashcard-back {
+    background: var(--back-bg);
+    color: var(--back-text);
+    transform: rotateY(180deg);
+  }
+  .flashcard.known .flashcard-front { border: 2px solid var(--success); }
+  .flashcard.unknown .flashcard-front { border: 2px solid var(--danger); }
+  .card-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .flashcard-back .card-num { color: rgba(255,255,255,0.75); }
+  .card-text { font-size: 0.95rem; line-height: 1.45; }
+  .flashcard-back .card-text { font-size: 0.88rem; }
+  .card-cat {
+    position: absolute;
+    bottom: 12px;
+    left: 20px;
+    font-size: 0.68rem;
+    color: var(--text-soft);
+    opacity: 0.85;
+  }
+  .flashcard-back .card-cat { color: rgba(255,255,255,0.65); }
+  .flip-hint {
+    position: absolute;
+    bottom: 12px;
+    right: 20px;
+    font-size: 0.68rem;
+    color: var(--text-soft);
+    opacity: 0.6;
+  }
+  .flashcard-back .flip-hint { color: rgba(255,255,255,0.65); }
+
+  .card-actions {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 5;
+  }
+  .card-actions button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    color: #fff;
+  }
+  .card-actions button:hover { transform: scale(1.15); }
+  .btn-known { background: var(--success); }
+  .btn-unknown { background: var(--danger); }
+  .btn-speak { background: var(--voice); }
+  .btn-speak.speaking { animation: pulse 1s infinite; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.7); }
+    50% { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
+  }
+
+  footer {
+    max-width: 1300px;
+    margin: 40px auto 20px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+  }
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-soft);
+    font-size: 1.1rem;
+  }
+  .voice-warning { color: #f59e0b; font-size: 0.8rem; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎴 300 Flashcards con Voz: Formulación y Evaluación de Proyectos</h1>
+  <button class="theme-toggle" id="themeToggle">🌙 Modo oscuro</button>
+</header>
+
+<div class="voice-panel">
+  <label for="voiceSelect">🗣️ Voz:</label>
+  <select id="voiceSelect"></select>
+
+  <label for="speedRange">⚡ Velocidad:</label>
+  <input type="range" id="speedRange" min="0.5" max="1.8" step="0.1" value="1">
+  <span class="speed-val" id="speedVal">1.0x</span>
+
+  <label class="toggle-auto">
+    <input type="checkbox" id="autoSpeakToggle">
+    🎧 Leer al voltear
+  </label>
+
+  <button class="btn-action" id="stopSpeakBtn">🔇 Detener voz</button>
+  <span id="voiceWarning" class="voice-warning"></span>
+</div>
+
+<div class="toolbar">
+  <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar en preguntas y respuestas...">
+  <button class="btn-action" id="resetBtn">🔄 Reiniciar progreso</button>
+  <button class="btn-action" id="shuffleBtn">🔀 Mezclar</button>
+</div>
+
+<div class="categories" id="categories"></div>
+
+<div class="progress-bar">
+  <span>Progreso:</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span id="progressText">0 / 300</span>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="grid" id="grid"></div>
+
+<footer>
+  Clic en la tarjeta para voltear · 🔊 para escuchar · ✓ / ✗ para marcar progreso · <span id="footerCount"></span>
+</footer>
+
+<script>
+/* ============================================================
+   BASE DE DATOS: 300 FLASHCARDS
+   ============================================================ */
+const FLASHCARDS = [
+  /* ===== 1. CONCEPTOS BÁSICOS (30) ===== */
+  {cat:"Conceptos Básicos",q:"¿Qué es un proyecto?",a:"Es un esfuerzo temporal emprendido para crear un producto, servicio o resultado único, con un principio y un fin definidos."},
+  {cat:"Conceptos Básicos",q:"¿Cuál es el objetivo principal de la formulación de proyectos?",a:"Definir de manera clara y precisa el problema a resolver, los objetivos, metas, actividades y recursos necesarios para llevar a cabo la idea."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la evaluación de proyectos?",a:"Es el proceso de comparar los beneficios y costos de un proyecto para determinar su viabilidad y conveniencia de implementación."},
+  {cat:"Conceptos Básicos",q:"¿Cuáles son las fases del ciclo de vida de un proyecto?",a:"Idea, Pre-inversión (Perfil, Pre-factibilidad, Factibilidad), Inversión (Ejecución) y Operación (Post-inversión)."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el estudio de perfil?",a:"Primera etapa de la pre-inversión. Se basa en información existente y juicio común para descartar ideas no viables de forma rápida y a bajo costo."},
+  {cat:"Conceptos Básicos",q:"¿En qué se diferencia el estudio de pre-factibilidad del de perfil?",a:"El de pre-factibilidad profundiza el análisis, descartando alternativas y afinando la información, pero sin llegar al detalle del estudio de factibilidad."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el estudio de factibilidad?",a:"El análisis más profundo y definitivo. Incluye estudios de mercado, técnico, legal, organizacional, financiero y de impacto ambiental. Sirve para la decisión final de invertir."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un proyecto social?",a:"Aquel cuyo objetivo principal es generar un impacto positivo en la sociedad o en una comunidad, mejorando su calidad de vida (educación, salud, infraestructura social)."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un proyecto privado?",a:"Aquel que busca principalmente una rentabilidad económica para sus inversionistas."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el horizonte de evaluación de un proyecto?",a:"Es el período de tiempo durante el cual se analizarán los flujos de ingresos y costos del proyecto para determinar su rentabilidad."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un proyecto de inversión?",a:"Una propuesta de acción que implica la asignación de recursos (humanos, materiales, financieros) para obtener un beneficio futuro."},
+  {cat:"Conceptos Básicos",q:"¿Qué diferencia hay entre proyecto y programa?",a:"Un proyecto es una intervención única con inicio y fin; un programa es un conjunto de proyectos coordinados para lograr un objetivo común de mayor alcance."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un plan?",a:"Un instrumento de planificación que define las grandes orientaciones, políticas y estrategias de una organización a largo plazo."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la maduración de un proyecto?",a:"El grado de profundidad y calidad de los estudios realizados, que permite reducir la incertidumbre antes de tomar la decisión de invertir."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un proyecto de infraestructura?",a:"Aquel que crea activos físicos de larga vida útil (carreteras, puentes, plantas de energía) que generan beneficios a la sociedad por décadas."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la evaluación ex-ante?",a:"La evaluación que se realiza antes de ejecutar el proyecto, en la fase de pre-inversión, para decidir si se lleva a cabo."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la evaluación durante la ejecución?",a:"El seguimiento y control que se hace durante la implementación para verificar que se cumplan los plazos, costos y calidad previstos."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la evaluación ex-post?",a:"La evaluación que se realiza una vez que el proyecto ha concluido y está en operación, para verificar si se cumplieron los objetivos."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el producto en un proyecto?",a:"El bien o servicio tangible o intangible que el proyecto genera y entrega a los usuarios o beneficiarios."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el objetivo general de un proyecto?",a:"El propósito central y de largo plazo que se espera alcanzar con la implementación del proyecto."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un objetivo específico?",a:"Un logro parcial y medible que contribuye al cumplimiento del objetivo general del proyecto."},
+  {cat:"Conceptos Básicos",q:"¿Qué son las metas de un proyecto?",a:"La cuantificación de los objetivos, expresada en cantidades, tiempos y unidades verificables."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la justificación de un proyecto?",a:"La argumentación que explica por qué es necesario y conveniente realizar el proyecto, destacando el problema que resuelve."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el alcance de un proyecto?",a:"La definición de lo que el proyecto incluirá y, por lo tanto, de lo que no incluirá, para evitar la corrupción del alcance."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la viabilidad de un proyecto?",a:"La condición de que un proyecto pueda realizarse con éxito, considerando aspectos técnicos, financieros, legales, ambientales y sociales."},
+  {cat:"Conceptos Básicos",q:"¿Qué es la rentabilidad de un proyecto?",a:"La capacidad del proyecto de generar beneficios económicos que superen los costos y la inversión realizada."},
+  {cat:"Conceptos Básicos",q:"¿Qué es un diagnóstico en la formulación de proyectos?",a:"El análisis de la situación actual para identificar el problema o necesidad que el proyecto debe atender."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el árbol de problemas?",a:"Una herramienta visual que organiza las causas y efectos de un problema central, facilitando la identificación de soluciones."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el árbol de objetivos?",a:"La transformación del árbol de problemas en metas positivas; se convierte cada causa en medio y cada efecto en fin."},
+  {cat:"Conceptos Básicos",q:"¿Qué es el marco lógico?",a:"Una metodología de planificación que organiza los objetivos, resultados, actividades e indicadores de un proyecto de forma jerárquica."},
+
+  /* ===== 2. ESTUDIO DE MERCADO (30) ===== */
+  {cat:"Estudio de Mercado",q:"¿Cuál es el objetivo del estudio de mercado?",a:"Determinar la existencia y magnitud de la demanda, analizar la oferta, definir el precio y las estrategias de comercialización."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la demanda?",a:"La cantidad de bienes o servicios que los consumidores están dispuestos y en capacidad de adquirir a un precio determinado en un momento dado."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la oferta?",a:"La cantidad de bienes o servicios que los productores están dispuestos y en capacidad de vender a un precio determinado en un momento dado."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el mercado meta o target?",a:"El segmento específico de la población (consumidores) al cual el proyecto dirige sus productos o servicios."},
+  {cat:"Estudio de Mercado",q:"¿Qué es un estudio de mercado primario?",a:"La recolección de datos directamente de la fuente (encuestas, entrevistas, observación)."},
+  {cat:"Estudio de Mercado",q:"¿Qué es un estudio de mercado secundario?",a:"La utilización de datos ya existentes y recopilados por otros (censos, informes de gobierno, estadísticas de gremios)."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la elasticidad-precio de la demanda?",a:"La medida de cómo cambia la cantidad demandada de un bien ante un cambio en su precio. Si es elástica, pequeños cambios en el precio afectan mucho la demanda."},
+  {cat:"Estudio de Mercado",q:"¿Cómo se proyecta la demanda?",a:"Con métodos como análisis de tendencias históricas, proyecciones basadas en variables macroeconómicas o el método de coeficientes de elasticidad."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el análisis de la competencia?",a:"Identificar a los competidores directos e indirectos, analizar sus fortalezas, debilidades, estrategias de precios y participación en el mercado."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la mezcla de marketing (4 P's)?",a:"Producto, Precio, Plaza (distribución) y Promoción. Son las variables clave para comercializar el bien o servicio del proyecto."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la demanda insatisfecha?",a:"La porción de la demanda total que no es cubierta por la oferta existente en el mercado."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la segmentación de mercado?",a:"El proceso de dividir el mercado total en grupos más pequeños con características, necesidades o comportamientos similares."},
+  {cat:"Estudio de Mercado",q:"¿Qué es un canal de distribución?",a:"La ruta que sigue un producto desde el productor hasta el consumidor final (mayorista, minorista, directo)."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el precio de penetración?",a:"Una estrategia que fija un precio bajo inicial para atraer rápidamente a los consumidores y ganar participación de mercado."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el precio de descremado?",a:"Una estrategia que fija un precio alto inicial para capturar a los consumidores dispuestos a pagar más, y luego se reduce."},
+  {cat:"Estudio de Mercado",q:"¿Qué es un producto sustituto?",a:"Un bien que puede satisfacer la misma necesidad que otro y que, por tanto, compite con él en el mercado."},
+  {cat:"Estudio de Mercado",q:"¿Qué es un producto complementario?",a:"Un bien que se consume junto con otro; el aumento en la demanda de uno incrementa la demanda del otro."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el análisis FODA?",a:"Una herramienta que analiza las Fortalezas, Oportunidades, Debilidades y Amenazas del proyecto o empresa."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la investigación de mercados?",a:"El proceso sistemático de recopilar, analizar e interpretar información sobre el mercado para tomar decisiones."},
+  {cat:"Estudio de Mercado",q:"¿Qué es una encuesta?",a:"Un instrumento de recolección de datos que consiste en un conjunto de preguntas dirigidas a una muestra de la población."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el muestreo?",a:"La técnica para seleccionar una parte representativa de la población que se va a estudiar."},
+  {cat:"Estudio de Mercado",q:"¿Qué es una muestra probabilística?",a:"Aquella en la que todos los elementos de la población tienen la misma probabilidad de ser seleccionados."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el margen de comercialización?",a:"La diferencia entre el precio de venta al consumidor y el costo de producción o adquisición del producto."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el posicionamiento de marca?",a:"La imagen que un producto o marca ocupa en la mente de los consumidores en relación con la competencia."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la demanda potencial?",a:"El máximo nivel de demanda que podría alcanzarse si todos los consumidores dispuestos a comprar lo hicieran."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la demanda efectiva?",a:"La demanda real que se concreta en el mercado, considerando el poder adquisitivo de los consumidores."},
+  {cat:"Estudio de Mercado",q:"¿Qué es un nicho de mercado?",a:"Un segmento pequeño y especializado de consumidores con necesidades muy específicas y poco atendidas."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la promoción de ventas?",a:"El conjunto de incentivos a corto plazo (descuentos, cupones, sorteos) para estimular la compra del producto."},
+  {cat:"Estudio de Mercado",q:"¿Qué es la publicidad?",a:"La comunicación pagada y no personal que busca informar, persuadir o recordar a los consumidores sobre un producto o marca."},
+  {cat:"Estudio de Mercado",q:"¿Qué es el ciclo de vida del producto?",a:"Las etapas por las que pasa un producto desde su introducción hasta su declive: introducción, crecimiento, madurez y declive."},
+
+  /* ===== 3. ESTUDIO TÉCNICO (30) ===== */
+  {cat:"Estudio Técnico",q:"¿Cuál es el objetivo del estudio técnico?",a:"Determinar dónde, cómo y con qué se va a producir el bien o servicio, definiendo el tamaño, la localización y la ingeniería del proyecto."},
+  {cat:"Estudio Técnico",q:"¿Qué define el tamaño de un proyecto?",a:"Su capacidad de producción (física o en valor) en un período de tiempo, generalmente un año."},
+  {cat:"Estudio Técnico",q:"¿Qué factores influyen en el tamaño de un proyecto?",a:"La demanda del mercado, la disponibilidad de insumos, la tecnología, la disponibilidad de financiamiento y la capacidad administrativa."},
+  {cat:"Estudio Técnico",q:"¿Qué es el estudio de localización?",a:"El proceso de determinar la ubicación geográfica óptima para el proyecto, que minimice los costos y maximice la cercanía al mercado y a las fuentes de insumos."},
+  {cat:"Estudio Técnico",q:"¿Qué es la macro-localización?",a:"La decisión sobre la región o zona geográfica general donde se ubicará el proyecto (un estado, una provincia)."},
+  {cat:"Estudio Técnico",q:"¿Qué es la micro-localización?",a:"La decisión sobre el terreno o sitio específico dentro de la macro-localización."},
+  {cat:"Estudio Técnico",q:"¿Qué es la ingeniería del proyecto?",a:"La parte del estudio técnico que define la tecnología, los procesos, los equipos, las instalaciones y la distribución física de la planta."},
+  {cat:"Estudio Técnico",q:"¿Qué es el balance de línea?",a:"Una técnica para distribuir las actividades de producción entre las estaciones de trabajo, buscando minimizar los cuellos de botella y maximizar la eficiencia."},
+  {cat:"Estudio Técnico",q:"¿Qué es un diagrama de flujo de proceso?",a:"Una representación gráfica de la secuencia de operaciones unitarias que se siguen para transformar los insumos en el producto final."},
+  {cat:"Estudio Técnico",q:"¿Qué es el mantenimiento preventivo y por qué es importante?",a:"Es el conjunto de actividades planificadas para mantener los equipos en buen estado y evitar fallas. Reduce costos y paradas imprevistas."},
+  {cat:"Estudio Técnico",q:"¿Qué es la capacidad instalada?",a:"La máxima cantidad de producción que puede alcanzar una planta con los recursos disponibles en un período determinado."},
+  {cat:"Estudio Técnico",q:"¿Qué es la capacidad utilizada?",a:"El porcentaje de la capacidad instalada que efectivamente se utiliza en la operación real del proyecto."},
+  {cat:"Estudio Técnico",q:"¿Qué es la distribución en planta (layout)?",a:"La ordenación física de los espacios y equipos en la planta para optimizar el flujo de materiales y personas."},
+  {cat:"Estudio Técnico",q:"¿Qué es la tecnología de producción?",a:"El conjunto de conocimientos, métodos, procesos y equipos utilizados para transformar los insumos en el producto final."},
+  {cat:"Estudio Técnico",q:"¿Qué es la selección de tecnología?",a:"El proceso de elegir la alternativa tecnológica más adecuada considerando costos, eficiencia, disponibilidad y compatibilidad con el proyecto."},
+  {cat:"Estudio Técnico",q:"¿Qué es un insumo?",a:"Cualquier recurso (materia prima, energía, mano de obra, agua) necesario para el proceso productivo del proyecto."},
+  {cat:"Estudio Técnico",q:"¿Qué son los factores de localización?",a:"Los criterios que se evalúan para elegir la ubicación del proyecto: cercanía al mercado, a los insumos, transporte, costos de terreno, clima, etc."},
+  {cat:"Estudio Técnico",q:"¿Qué es un cuello de botella?",a:"La etapa del proceso productivo que limita la capacidad total del sistema por ser la más lenta o restrictiva."},
+  {cat:"Estudio Técnico",q:"¿Qué es el tiempo de ciclo?",a:"El tiempo que se tarda en completar una unidad de producto desde el inicio hasta el final del proceso."},
+  {cat:"Estudio Técnico",q:"¿Qué es la eficiencia técnica?",a:"La capacidad de producir la máxima cantidad de producto con la mínima cantidad de recursos, dados los límites tecnológicos."},
+  {cat:"Estudio Técnico",q:"¿Qué es la productividad?",a:"La relación entre la cantidad de producto obtenido y la cantidad de recursos utilizados (trabajo, capital, insumos)."},
+  {cat:"Estudio Técnico",q:"¿Qué es un proceso continuo?",a:"Un proceso productivo que opera las 24 horas sin interrupciones, típico de industrias como la química o la siderúrgica."},
+  {cat:"Estudio Técnico",q:"¿Qué es un proceso por lotes?",a:"Un proceso que produce cantidades limitadas de producto en intervalos, alternando entre diferentes productos o líneas."},
+  {cat:"Estudio Técnico",q:"¿Qué es un proceso unitario?",a:"Cada una de las operaciones individuales (mezcla, secado, molienda) que componen el proceso productivo total."},
+  {cat:"Estudio Técnico",q:"¿Qué es el lay-out por producto?",a:"Una distribución en planta organizada por línea de producción, donde los equipos se ordenan según la secuencia del proceso."},
+  {cat:"Estudio Técnico",q:"¿Qué es el lay-out por proceso?",a:"Una distribución en planta donde los equipos similares se agrupan en áreas, útil para producir variedad de productos."},
+  {cat:"Estudio Técnico",q:"¿Qué son los costos de mantenimiento?",a:"Los gastos necesarios para conservar los equipos e instalaciones en condiciones operativas (repuestos, mano de obra, lubricantes)."},
+  {cat:"Estudio Técnico",q:"¿Qué es la vida útil de un activo?",a:"El período durante el cual un equipo o instalación puede ser utilizado de manera productiva antes de requerir reemplazo."},
+  {cat:"Estudio Técnico",q:"¿Qué es el estudio de disponibilidad de insumos?",a:"El análisis de la cantidad, calidad, precio y continuidad del suministro de los insumos requeridos por el proyecto."},
+  {cat:"Estudio Técnico",q:"¿Qué es la ingeniería básica y de detalle?",a:"La básica define los procesos y equipos principales; la de detalle especifica planos, materiales y especificaciones para la construcción."},
+
+  /* ===== 4. LEGAL Y ORGANIZACIONAL (30) ===== */
+  {cat:"Legal y Organizacional",q:"¿Qué estudia el estudio legal?",a:"Las normas y regulaciones que afectan al proyecto en su creación y operación (permisos, licencias, leyes laborales, tributarias y ambientales)."},
+  {cat:"Legal y Organizacional",q:"¿Qué es la forma jurídica de una empresa?",a:"La estructura legal que adoptará el proyecto (Sociedad Anónima, S.R.L., Cooperativa, Persona Física, etc.)."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el estudio organizacional?",a:"El análisis de la estructura administrativa y de personal necesaria para la operación del proyecto."},
+  {cat:"Legal y Organizacional",q:"¿Qué es un organigrama?",a:"La representación gráfica de la estructura jerárquica y funcional de una organización."},
+  {cat:"Legal y Organizacional",q:"¿Qué es un manual de funciones?",a:"Un documento que describe las responsabilidades, tareas y requisitos de cada puesto de trabajo en la organización."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el costo de la mano de obra?",a:"La remuneración total que recibe un trabajador (salarios, prestaciones, seguridad social) y que representa un costo para el proyecto."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el proceso de reclutamiento y selección?",a:"El conjunto de actividades para atraer, evaluar y contratar al personal adecuado para cada puesto de la organización."},
+  {cat:"Legal y Organizacional",q:"¿Qué es la estructura funcional vs. la estructura por proyectos?",a:"La funcional agrupa a los empleados por especialidad (marketing, finanzas). La de proyectos los agrupa por el proyecto en sí."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el estudio de impacto ambiental (EIA)?",a:"Un documento técnico que identifica, predice y evalúa los efectos negativos que un proyecto puede causar en el medio ambiente y propone medidas para mitigarlos."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una licencia ambiental?",a:"La autorización legal requerida para ejecutar un proyecto que pueda causar un impacto significativo en el medio ambiente."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una Sociedad Anónima (S.A.)?",a:"Una sociedad mercantil cuyo capital está dividido en acciones y donde la responsabilidad de los socios se limita al monto de sus aportes."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una Sociedad de Responsabilidad Limitada (S.R.L.)?",a:"Una sociedad donde la responsabilidad de los socios está limitada a su aporte, pero sin emitir acciones; el capital se divide en participaciones."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una cooperativa?",a:"Una asociación autónoma de personas que se unen voluntariamente para satisfacer necesidades comunes mediante una empresa de propiedad conjunta."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el RUC o registro fiscal?",a:"El número de identificación tributaria que toda empresa debe obtener para operar legalmente y cumplir con sus obligaciones fiscales."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una licencia de funcionamiento?",a:"El permiso municipal que autoriza a un establecimiento a operar en un local determinado."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el régimen laboral?",a:"El conjunto de normas que regulan la relación entre empleador y trabajador (contratos, jornada, salarios, beneficios sociales)."},
+  {cat:"Legal y Organizacional",q:"¿Qué es la seguridad social?",a:"El sistema que protege a los trabajadores ante riesgos como enfermedad, accidentes, vejez o desempleo, generalmente financiado por aportes."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el impuesto a la renta?",a:"El tributo que grava las utilidades obtenidas por la empresa en un período fiscal."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el IVA?",a:"El Impuesto al Valor Agregado que grava el consumo de bienes y servicios en cada etapa de la cadena de comercialización."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una patente?",a:"El derecho exclusivo que otorga el Estado para explotar comercialmente una invención por un período determinado."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una marca registrada?",a:"El signo distintivo (nombre, logo) que identifica los productos o servicios de una empresa y que está legalmente protegido."},
+  {cat:"Legal y Organizacional",q:"¿Qué es un contrato de trabajo?",a:"El acuerdo entre empleador y trabajador que establece las condiciones de la relación laboral (funciones, salario, jornada)."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el manual de organización y funciones (MOF)?",a:"El documento que describe la estructura orgánica, los objetivos y las funciones de cada unidad de la empresa."},
+  {cat:"Legal y Organizacional",q:"¿Qué es la cultura organizacional?",a:"El conjunto de valores, creencias, normas y prácticas compartidas que caracterizan a una organización."},
+  {cat:"Legal y Organizacional",q:"¿Qué es el clima laboral?",a:"La percepción que los trabajadores tienen sobre su ambiente de trabajo, influida por las condiciones físicas, las relaciones y las políticas."},
+  {cat:"Legal y Organizacional",q:"¿Qué es la capacitación de personal?",a:"El proceso de desarrollar las habilidades y conocimientos de los trabajadores para mejorar su desempeño."},
+  {cat:"Legal y Organizacional",q:"¿Qué es una consultoría externa?",a:"La contratación de especialistas externos para asesorar en áreas específicas del proyecto (legal, financiera, técnica)."},
+  {cat:"Legal y Organizacional",q:"¿Qué es la responsabilidad social empresarial (RSE)?",a:"El compromiso voluntario de la empresa de contribuir al desarrollo social, económico y ambiental, más allá de sus obligaciones legales."},
+  {cat:"Legal y Organizacional",q:"¿Qué es un estudio de riesgos legales?",a:"El análisis de las posibles contingencias jurídicas del proyecto (demandas, incumplimientos, cambios normativos) y sus consecuencias."},
+  {cat:"Legal y Organizacional",q:"¿Qué son los permisos sectoriales?",a:"Las autorizaciones específicas requeridas por el tipo de actividad (sanitaria, minera, energética, educativa) para operar legalmente."},
+
+  /* ===== 5. ESTUDIO FINANCIERO (30) ===== */
+  {cat:"Estudio Financiero",q:"¿Cuál es el objetivo del estudio financiero?",a:"Determinar el monto total de la inversión, los ingresos y costos del proyecto, y evaluar su rentabilidad."},
+  {cat:"Estudio Financiero",q:"¿Qué es la inversión inicial?",a:"El desembolso de capital que se realiza al inicio del proyecto para adquirir activos fijos y capital de trabajo."},
+  {cat:"Estudio Financiero",q:"¿Qué es el capital de trabajo?",a:"Los recursos financieros necesarios para que la empresa pueda operar en el corto plazo (compra de materia prima, pago de salarios)."},
+  {cat:"Estudio Financiero",q:"¿Qué son los costos de producción?",a:"Todos los gastos incurridos en el proceso de transformación de la materia prima en el producto final."},
+  {cat:"Estudio Financiero",q:"¿Qué son los gastos de administración y ventas?",a:"Los gastos relacionados con la gestión de la empresa y la comercialización del producto, no directamente con la producción."},
+  {cat:"Estudio Financiero",q:"¿Qué es un costo fijo?",a:"Un costo que no varía con el nivel de producción (alquiler de la planta, sueldos del personal administrativo)."},
+  {cat:"Estudio Financiero",q:"¿Qué es un costo variable?",a:"Un costo que cambia en proporción directa con el nivel de producción (materia prima, mano de obra directa)."},
+  {cat:"Estudio Financiero",q:"¿Qué es el punto de equilibrio?",a:"El nivel de ventas en el cual los ingresos totales son iguales a los costos totales, por lo que no hay ni utilidad ni pérdida."},
+  {cat:"Estudio Financiero",q:"¿Qué es el estado de resultados pro-forma?",a:"Una proyección del estado de ganancias y pérdidas para el futuro, que muestra si el proyecto será rentable a nivel operativo."},
+  {cat:"Estudio Financiero",q:"¿Qué es el presupuesto de inversión?",a:"Un documento que detalla todos los activos fijos y el capital de trabajo necesarios para poner en marcha el proyecto."},
+  {cat:"Estudio Financiero",q:"¿Qué es el costo directo?",a:"El costo que se puede identificar y asignar directamente a la producción de un bien o servicio específico."},
+  {cat:"Estudio Financiero",q:"¿Qué es el costo indirecto?",a:"El costo que no se puede asignar directamente a un producto, pero que es necesario para el funcionamiento de la operación (supervisión, servicios generales)."},
+  {cat:"Estudio Financiero",q:"¿Qué es la depreciación?",a:"La pérdida de valor de un activo fijo por el uso, el paso del tiempo o la obsolescencia tecnológica."},
+  {cat:"Estudio Financiero",q:"¿Qué es la amortización?",a:"La distribución del costo de un activo intangible (patentes, licencias) o de una deuda a lo largo de su vida útil."},
+  {cat:"Estudio Financiero",q:"¿Qué es el valor de rescate o salvamento?",a:"El valor estimado que tendrá un activo al final de su vida útil, cuando el proyecto termine."},
+  {cat:"Estudio Financiero",q:"¿Qué es un balance general pro-forma?",a:"La proyección del estado de situación financiera del proyecto, que muestra el activo, pasivo y patrimonio en un momento futuro."},
+  {cat:"Estudio Financiero",q:"¿Qué es un flujo de caja proyectado?",a:"El estado que muestra los ingresos y egresos de efectivo del proyecto en cada período, para determinar su liquidez."},
+  {cat:"Estudio Financiero",q:"¿Qué es el costo total?",a:"La suma de todos los costos fijos y variables en los que incurre el proyecto para producir y vender."},
+  {cat:"Estudio Financiero",q:"¿Qué es el margen de contribución?",a:"La diferencia entre el precio de venta y el costo variable unitario; indica cuánto contribuye cada venta a cubrir los costos fijos."},
+  {cat:"Estudio Financiero",q:"¿Qué es el margen bruto?",a:"La diferencia entre los ingresos por ventas y el costo de los bienes vendidos, expresada como porcentaje de las ventas."},
+  {cat:"Estudio Financiero",q:"¿Qué es el margen neto?",a:"La utilidad neta después de impuestos, expresada como porcentaje de las ventas totales."},
+  {cat:"Estudio Financiero",q:"¿Qué es el costo de oportunidad?",a:"El beneficio que se deja de obtener al elegir una alternativa en lugar de otra; es el valor de la mejor opción no realizada."},
+  {cat:"Estudio Financiero",q:"¿Qué es un costo hundido?",a:"Un costo ya incurrido que no puede recuperarse y que, por tanto, no debe considerarse en las decisiones futuras."},
+  {cat:"Estudio Financiero",q:"¿Qué es el presupuesto de ventas?",a:"La proyección de los ingresos que se esperan obtener por la venta de los productos o servicios del proyecto."},
+  {cat:"Estudio Financiero",q:"¿Qué es el presupuesto de producción?",a:"La estimación de las unidades a producir en cada período, considerando las ventas proyectadas y los niveles de inventario."},
+  {cat:"Estudio Financiero",q:"¿Qué es el inventario inicial y final?",a:"El valor de los productos o materias primas en existencia al inicio y al final de un período contable."},
+  {cat:"Estudio Financiero",q:"¿Qué es una proyección financiera?",a:"La estimación de los resultados económicos futuros del proyecto, basada en supuestos sobre ingresos, costos e inversiones."},
+  {cat:"Estudio Financiero",q:"¿Qué es el análisis vertical y horizontal?",a:"El vertical compara cada partida con un total (porcentajes). El horizontal compara la evolución de las partidas a lo largo del tiempo."},
+  {cat:"Estudio Financiero",q:"¿Qué es el costo financiero?",a:"El costo asociado al uso de recursos ajenos, como los intereses y comisiones de los préstamos."},
+  {cat:"Estudio Financiero",q:"¿Qué es la utilidad bruta?",a:"La diferencia entre los ingresos por ventas y el costo de producción o adquisición de los bienes vendidos, sin descontar gastos operativos."},
+
+  /* ===== 6. FINANCIAMIENTO Y EVALUACIÓN (30) ===== */
+  {cat:"Financiamiento y Evaluación",q:"¿Cuáles son las dos principales fuentes de financiamiento?",a:"Recursos propios (aportes de los socios) y recursos ajenos (préstamos bancarios, bonos)."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el costo de capital o WACC?",a:"El costo promedio ponderado de las diferentes fuentes de financiamiento de la empresa. Se usa como tasa de descuento."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el Valor Actual Neto (VAN)?",a:"Un criterio que trae a valor presente todos los flujos de caja futuros del proyecto, descontados a una tasa de interés. Si el VAN es mayor a 0, el proyecto es viable."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es la Tasa Interna de Retorno (TIR)?",a:"Es la tasa de descuento que hace que el VAN de un proyecto sea igual a cero. Representa la rentabilidad propia del proyecto."},
+  {cat:"Financiamiento y Evaluación",q:"¿Cómo se decide entre dos proyectos con el VAN y la TIR?",a:"Generalmente, el VAN es el criterio más confiable. La TIR puede dar resultados erróneos al comparar proyectos con diferentes escalas o flujos no convencionales."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el período de recuperación (Payback)?",a:"El tiempo necesario para que los flujos de caja acumulados del proyecto igualen la inversión inicial."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el flujo de caja libre?",a:"El efectivo disponible para distribuir entre los inversores (accionistas y acreedores) después de cubrir las necesidades operativas y de inversión."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es la tasa de descuento?",a:"La tasa de interés utilizada para convertir flujos de caja futuros a su valor presente. Refleja el costo de oportunidad del capital."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el análisis de sensibilidad?",a:"Una técnica que evalúa cómo cambia el VAN o la TIR del proyecto ante variaciones en una variable clave (precio de venta, demanda, costo de materia prima)."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es un escenario pesimista, base y optimista?",a:"Diferentes proyecciones de un proyecto basadas en supuestos favorables, realistas y desfavorables para las variables críticas."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es un préstamo bancario?",a:"Una fuente de financiamiento ajena que implica recibir un monto de dinero con la obligación de devolverlo con intereses en plazos establecidos."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el leasing?",a:"Un contrato de arrendamiento con opción de compra del activo al final del plazo, usado frecuentemente para financiar equipos."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el capital semilla?",a:"El financiamiento inicial que recibe un proyecto o emprendimiento en sus primeras etapas de desarrollo."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el capital de riesgo (venture capital)?",a:"Inversión en empresas nuevas o en crecimiento con alto potencial, a cambio de participación accionaria."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el crowdfunding?",a:"El financiamiento colectivo mediante el cual muchas personas aportan pequeñas cantidades de dinero a un proyecto, generalmente a través de plataformas digitales."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es la estructura de capital?",a:"La combinación de deuda y capital propio que utiliza una empresa para financiar sus activos y operaciones."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el apalancamiento financiero?",a:"El uso de deuda para financiar la inversión, buscando amplificar la rentabilidad del capital propio (aunque también amplifica el riesgo)."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el índice de rentabilidad (IR)?",a:"Un criterio que divide el valor presente de los flujos futuros entre la inversión inicial. Si IR es mayor a 1, el proyecto es viable."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es la tasa de rentabilidad contable?",a:"La relación entre la utilidad promedio anual y la inversión promedio, usada como medida simple de rentabilidad."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el flujo de caja operativo?",a:"El efectivo generado por las operaciones normales del proyecto, antes de considerar inversiones y financiamiento."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el flujo de caja de inversión?",a:"El efectivo destinado a la adquisición de activos fijos y otras inversiones de capital."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el flujo de caja de financiamiento?",a:"El efectivo proveniente de préstamos, aportes de capital y el pago de intereses y dividendos."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es una anualidad?",a:"Una serie de pagos iguales realizados a intervalos regulares durante un período determinado."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el valor futuro?",a:"El valor que tendrá una cantidad de dinero actual después de invertirla durante un período a una tasa de interés determinada."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el valor presente?",a:"El valor actual de una cantidad de dinero que se recibirá en el futuro, descontada a una tasa de interés."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es la inflación y cómo afecta al proyecto?",a:"El aumento generalizado de precios. Afecta los costos, ingresos y la tasa de descuento, por lo que debe considerarse en las proyecciones."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es la tasa de interés real vs. nominal?",a:"La nominal es la tasa observada en el mercado. La real descuenta el efecto de la inflación, reflejando el poder adquisitivo."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el riesgo financiero?",a:"La posibilidad de que el proyecto no pueda cumplir con sus obligaciones de pago o que los retornos esperados no se materialicen."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es el costo marginal?",a:"El costo adicional de producir una unidad más del bien o servicio."},
+  {cat:"Financiamiento y Evaluación",q:"¿Qué es un bono?",a:"Un título de deuda que emite una empresa o gobierno para obtener financiamiento, con la obligación de pagar intereses y devolver el capital."},
+
+  /* ===== 7. ECONÓMICA Y SOCIAL (30) ===== */
+  {cat:"Económica y Social",q:"¿Cuál es la diferencia entre evaluación financiera y económica?",a:"La financiera evalúa la rentabilidad desde la perspectiva del inversionista (precios de mercado). La económica la evalúa desde la perspectiva de la sociedad en su conjunto."},
+  {cat:"Económica y Social",q:"¿Qué son los precios sombra o sociales?",a:"Precios que reflejan el verdadero costo de oportunidad para la sociedad de un bien o servicio, ajustando los precios de mercado por impuestos, subsidios y distorsiones."},
+  {cat:"Económica y Social",q:"¿Qué es la evaluación social de proyectos?",a:"Un análisis que valora el impacto del proyecto en el bienestar de la sociedad, considerando los beneficios y costos sociales."},
+  {cat:"Económica y Social",q:"¿Qué es la tasa social de descuento?",a:"La tasa que utiliza el Estado para descontar los flujos de fondos sociales, reflejando el costo de oportunidad social de los recursos."},
+  {cat:"Económica y Social",q:"¿Qué es un beneficio social?",a:"Un efecto positivo del proyecto que contribuye al bienestar de la comunidad (reducción de enfermedades, creación de empleo, mejora de la educación)."},
+  {cat:"Económica y Social",q:"¿Qué es un costo social?",a:"Un efecto negativo del proyecto para la comunidad (contaminación, congestión vehicular, reubicación de comunidades)."},
+  {cat:"Económica y Social",q:"¿Qué es el análisis costo-beneficio?",a:"Una metodología para evaluar proyectos sociales, comparando los beneficios y costos en términos monetarios para determinar si generan un beneficio neto para la sociedad."},
+  {cat:"Económica y Social",q:"¿Qué son las externalidades?",a:"Efectos (positivos o negativos) de una actividad económica que afectan a terceros no involucrados directamente en la transacción."},
+  {cat:"Económica y Social",q:"¿Qué es la evaluación de impacto?",a:"Un análisis riguroso que busca determinar si el proyecto produjo los cambios esperados (efectos) y si estos son atribuibles a la intervención."},
+  {cat:"Económica y Social",q:"¿Qué es la línea de base en la evaluación de impacto?",a:"La situación de la población objetivo antes de la implementación del proyecto, con la cual se comparará el después para medir el impacto."},
+  {cat:"Económica y Social",q:"¿Qué es un bien público?",a:"Un bien no excluyente y no rival, que beneficia a todos sin que se pueda impedir su consumo (defensa nacional, alumbrado público)."},
+  {cat:"Económica y Social",q:"¿Qué es un bien meritorio?",a:"Un bien que la sociedad considera deseable y que el Estado promueve o provee, aunque el mercado no lo asignaría eficientemente (educación, salud)."},
+  {cat:"Económica y Social",q:"¿Qué es el excedente del consumidor?",a:"La diferencia entre lo que un consumidor está dispuesto a pagar y lo que realmente paga; representa su beneficio."},
+  {cat:"Económica y Social",q:"¿Qué es el excedente del productor?",a:"La diferencia entre lo que un productor recibe y lo que estaría dispuesto a aceptar; representa su beneficio."},
+  {cat:"Económica y Social",q:"¿Qué es el impacto ambiental?",a:"Cualquier alteración significativa del medio ambiente (positiva o negativa) causada por la actividad del proyecto."},
+  {cat:"Económica y Social",q:"¿Qué es la mitigación ambiental?",a:"El conjunto de medidas para reducir o compensar los impactos ambientales negativos de un proyecto."},
+  {cat:"Económica y Social",q:"¿Qué es el desarrollo sostenible?",a:"El desarrollo que satisface las necesidades del presente sin comprometer la capacidad de las generaciones futuras para satisfacer las suyas."},
+  {cat:"Económica y Social",q:"¿Qué es la evaluación privada vs. la evaluación social?",a:"La privada considera solo los costos y beneficios que afectan al inversionista. La social incluye todos los efectos sobre la sociedad."},
+  {cat:"Económica y Social",q:"¿Qué es el valor agregado?",a:"El valor adicional que se genera en cada etapa del proceso productivo, medido como la diferencia entre el valor de la producción y el de los insumos."},
+  {cat:"Económica y Social",q:"¿Qué es el PIB y cómo se relaciona con los proyectos?",a:"El Producto Interno Bruto es el valor total de bienes y servicios producidos por un país. Los proyectos contribuyen a su crecimiento."},
+  {cat:"Económica y Social",q:"¿Qué es la tasa de desempleo y su relación con el proyecto?",a:"El porcentaje de la población activa sin empleo. Un proyecto que crea empleo contribuye a reducirla (beneficio social)."},
+  {cat:"Económica y Social",q:"¿Qué es el análisis de género en proyectos?",a:"Un enfoque que examina cómo los beneficios y costos del proyecto se distribuyen de manera diferente entre hombres y mujeres."},
+  {cat:"Económica y Social",q:"¿Qué es la focalización en proyectos sociales?",a:"La identificación y selección de la población objetivo que recibirá los beneficios del proyecto, priorizando a los más necesitados."},
+  {cat:"Económica y Social",q:"¿Qué es un indicador social?",a:"Una medida cuantitativa que refleja el nivel de bienestar de una población (esperanza de vida, tasa de alfabetización, ingreso per cápita)."},
+  {cat:"Económica y Social",q:"¿Qué es el Índice de Desarrollo Humano (IDH)?",a:"Un indicador que combina esperanza de vida, educación e ingreso per cápita para medir el desarrollo de un país."},
+  {cat:"Económica y Social",q:"¿Qué es la pobreza multidimensional?",a:"La carencia en múltiples dimensiones del bienestar (salud, educación, vivienda, empleo), no solo el ingreso."},
+  {cat:"Económica y Social",q:"¿Qué es el retorno social de la inversión (SROI)?",a:"Una metodología que mide el valor social, ambiental y económico generado por un proyecto en relación con la inversión realizada."},
+  {cat:"Económica y Social",q:"¿Qué es la teoría del cambio?",a:"Un modelo que explica cómo y por qué se espera que una intervención produzca los resultados deseados, mostrando la cadena causal."},
+  {cat:"Económica y Social",q:"¿Qué es la evaluación de impacto experimental?",a:"Aquella que usa grupos de tratamiento y control asignados aleatoriamente para medir el efecto causal del proyecto."},
+  {cat:"Económica y Social",q:"¿Qué es la evaluación cuasi-experimental?",a:"Aquella que compara grupos de tratamiento y control sin asignación aleatoria, usando técnicas estadísticas para controlar sesgos."},
+
+  /* ===== 8. RIESGO (30) ===== */
+  {cat:"Riesgo",q:"¿Qué es el riesgo en un proyecto?",a:"La probabilidad de que ocurra un evento adverso que afecte el logro de los objetivos del proyecto (aumento de costos, menor demanda)."},
+  {cat:"Riesgo",q:"¿Qué es la incertidumbre?",a:"La falta de información completa y confiable sobre el futuro, lo que impide asignar probabilidades a los posibles resultados."},
+  {cat:"Riesgo",q:"¿Cuál es la diferencia entre riesgo e incertidumbre?",a:"El riesgo es medible (probabilidades conocidas); la incertidumbre no es fácilmente medible (probabilidades desconocidas)."},
+  {cat:"Riesgo",q:"¿Qué es el análisis de riesgo?",a:"El proceso de identificar, analizar y priorizar los riesgos del proyecto, y definir planes de acción para mitigarlos."},
+  {cat:"Riesgo",q:"¿Qué es una matriz de riesgo?",a:"Una herramienta que clasifica los riesgos según su probabilidad de ocurrencia e impacto potencial."},
+  {cat:"Riesgo",q:"¿Qué es una medida de mitigación?",a:"Una acción planificada para reducir la probabilidad o el impacto negativo de un riesgo identificado."},
+  {cat:"Riesgo",q:"¿Qué es un plan de contingencia?",a:"Un plan de acción alternativo a seguir en caso de que ocurra un evento de riesgo y las medidas de mitigación no sean suficientes."},
+  {cat:"Riesgo",q:"¿Qué es el análisis de sensibilidad univariado y multivariado?",a:"El univariado cambia una variable a la vez. El multivariado cambia múltiples variables simultáneamente para ver el efecto combinado."},
+  {cat:"Riesgo",q:"¿Qué es la simulación de Monte Carlo?",a:"Una técnica que usa modelos computacionales para simular miles de escenarios posibles asignando distribuciones de probabilidad a las variables inciertas."},
+  {cat:"Riesgo",q:"¿Qué es el árbol de decisión?",a:"Una herramienta gráfica que representa las decisiones secuenciales, los eventos inciertos y sus posibles consecuencias, útil para evaluar proyectos con etapas."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo de mercado?",a:"El riesgo de que cambios en las condiciones del mercado (precios, demanda, competencia) afecten negativamente los resultados del proyecto."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo financiero?",a:"El riesgo de que el proyecto no pueda cumplir con sus obligaciones de pago o que los retornos no se materialicen."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo técnico?",a:"El riesgo de que la tecnología elegida no funcione como se espera, o que surjan problemas de diseño, construcción u operación."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo legal?",a:"El riesgo de que cambios normativos, demandas o incumplimientos legales afecten la viabilidad del proyecto."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo político?",a:"El riesgo de que cambios en el gobierno o en las políticas públicas afecten la operación del proyecto (expropiaciones, cambios tributarios)."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo ambiental?",a:"El riesgo de que el proyecto cause daños al medio ambiente y deba asumir costos de remediación o sanciones."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo de tipo de cambio?",a:"El riesgo de que las variaciones en el tipo de cambio afecten los costos o ingresos del proyecto (insumos importados, ventas al exterior)."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo de crédito?",a:"El riesgo de que un cliente o deudor no cumpla con sus obligaciones de pago."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo operacional?",a:"El riesgo de pérdidas por fallas en los procesos internos, personas, sistemas o eventos externos."},
+  {cat:"Riesgo",q:"¿Qué es la probabilidad de ocurrencia en una matriz de riesgo?",a:"La frecuencia esperada con la que puede ocurrir un evento de riesgo (rara, improbable, posible, probable, casi segura)."},
+  {cat:"Riesgo",q:"¿Qué es el impacto en una matriz de riesgo?",a:"La magnitud de las consecuencias negativas si el riesgo se materializa (insignificante, menor, moderado, mayor, catastrófico)."},
+  {cat:"Riesgo",q:"¿Qué es la transferencia de riesgo?",a:"Una estrategia que consiste en trasladar el riesgo a un tercero (seguros, garantías, subcontratación)."},
+  {cat:"Riesgo",q:"¿Qué es la aceptación del riesgo?",a:"Una estrategia que consiste en asumir el riesgo sin tomar acciones, cuando el costo de mitigarlo supera el beneficio."},
+  {cat:"Riesgo",q:"¿Qué es la evitación del riesgo?",a:"Una estrategia que consiste en eliminar la actividad que genera el riesgo, cambiando el plan del proyecto."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo residual?",a:"El riesgo que permanece después de aplicar las medidas de mitigación."},
+  {cat:"Riesgo",q:"¿Qué es el riesgo país?",a:"El riesgo asociado a invertir en un país determinado, por factores políticos, económicos o sociales."},
+  {cat:"Riesgo",q:"¿Qué es la prima de riesgo?",a:"El rendimiento adicional que exige un inversionista por asumir un riesgo mayor al de una inversión libre de riesgo."},
+  {cat:"Riesgo",q:"¿Qué es un activo libre de riesgo?",a:"Un activo cuya rentabilidad se conoce con certeza (por ejemplo, bonos del tesoro de países estables)."},
+  {cat:"Riesgo",q:"¿Qué es el VaR (Value at Risk)?",a:"Una medida estadística que estima la máxima pérdida esperada de una inversión en un período y nivel de confianza dados."},
+  {cat:"Riesgo",q:"¿Qué es el análisis cualitativo y cuantitativo de riesgos?",a:"El cualitativo evalúa los riesgos mediante categorías (alto, medio, bajo). El cuantitativo los evalúa numéricamente con modelos estadísticos y distribuciones de probabilidad."},
+
+  /* ===== 9. GESTIÓN Y EJECUCIÓN (30) ===== */
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de proyectos?",a:"La aplicación de conocimientos, habilidades, herramientas y técnicas a las actividades del proyecto para cumplir con sus requisitos."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el Project Management Institute (PMI)?",a:"Una de las asociaciones más importantes a nivel mundial en gestión de proyectos, que publica la Guía del PMBOK."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el PMBOK?",a:"Una guía de las buenas prácticas en la gestión de proyectos, que describe los procesos, herramientas y técnicas clave."},
+  {cat:"Gestión y Ejecución",q:"¿Cuáles son los 5 grupos de procesos en la gestión de proyectos según el PMBOK?",a:"Inicio, Planificación, Ejecución, Monitoreo y Control, y Cierre."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la Estructura de Desglose del Trabajo (EDT/WBS)?",a:"Una descomposición jerárquica del trabajo total del proyecto en componentes más pequeños y manejables."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es un hito (milestone)?",a:"Un evento significativo en el proyecto, generalmente la finalización de una fase importante. No tiene duración y sirve para monitorear el progreso."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el cronograma del proyecto?",a:"Una herramienta que muestra la secuencia de actividades, su duración y las fechas de inicio y fin."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el diagrama de Gantt?",a:"Una representación gráfica del cronograma que muestra las actividades como barras horizontales a lo largo de una línea de tiempo."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el método de la ruta crítica (CPM)?",a:"Una técnica para identificar la secuencia de actividades más larga del proyecto, que determina la duración mínima total del mismo."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el método PERT?",a:"Una técnica de planificación que usa estimaciones optimistas, pesimistas y más probables para calcular la duración esperada de las actividades."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la holgura (float) de una actividad?",a:"El tiempo que una actividad puede retrasarse sin afectar la fecha de finalización del proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el acta de constitución del proyecto (project charter)?",a:"El documento que autoriza formalmente la existencia del proyecto y define sus objetivos, alcance y responsables."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el plan de gestión del proyecto?",a:"El documento que describe cómo se ejecutará, monitoreará y controlará el proyecto, incluyendo alcance, cronograma, costos y riesgos."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión del alcance?",a:"El proceso de definir y controlar lo que está incluido y lo que no está incluido en el proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión del tiempo?",a:"El proceso de planificar, estimar, programar y controlar la duración de las actividades del proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de costos?",a:"El proceso de planificar, estimar, presupuestar y controlar los costos del proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de la calidad?",a:"El proceso de planificar y controlar que el proyecto cumpla con los requisitos y estándares de calidad definidos."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de los recursos humanos?",a:"El proceso de organizar, dirigir y desarrollar el equipo de trabajo del proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de las comunicaciones?",a:"El proceso de planificar, generar, distribuir y almacenar la información del proyecto de manera eficaz."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de los interesados (stakeholders)?",a:"El proceso de identificar a las personas o entidades afectadas por el proyecto y gestionar sus expectativas."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión de adquisiciones?",a:"El proceso de comprar o adquirir productos, servicios o resultados necesarios para el proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el valor ganado (EVM)?",a:"Una técnica de control que integra alcance, cronograma y costos para medir el desempeño del proyecto en un momento dado."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el CPI (índice de desempeño del costo)?",a:"Un indicador de EVM que mide la eficiencia del costo: CPI = Valor Ganado / Costo Real. Si CPI es mayor a 1, hay ahorro."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el SPI (índice de desempeño del cronograma)?",a:"Un indicador de EVM que mide la eficiencia del tiempo: SPI = Valor Ganado / Valor Planificado. Si SPI es mayor a 1, hay adelanto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es una reunión de cierre del proyecto?",a:"La reunión final donde se revisan los resultados, se documentan las lecciones aprendidas y se formaliza la conclusión del proyecto."},
+  {cat:"Gestión y Ejecución",q:"¿Qué son las lecciones aprendidas?",a:"El conocimiento adquirido durante el proyecto (éxitos y fracasos) que se documenta para mejorar futuros proyectos."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el equipo de proyecto?",a:"El conjunto de personas que trabajan bajo la dirección del gerente de proyecto para lograr los objetivos."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el patrocinador del proyecto (sponsor)?",a:"La persona o entidad que proporciona los recursos y el apoyo político al proyecto, y que asume la responsabilidad ejecutiva del mismo."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es el gerente de proyecto?",a:"La persona responsable de planificar, ejecutar y controlar el proyecto, y de liderar al equipo para alcanzar los objetivos."},
+  {cat:"Gestión y Ejecución",q:"¿Qué es la gestión ágil de proyectos?",a:"Un enfoque iterativo e incremental que prioriza la entrega de valor temprano, la colaboración y la adaptación al cambio."},
+
+  /* ===== 10. TEMAS COMPLEMENTARIOS (30) ===== */
+  {cat:"Temas Complementarios",q:"¿Qué es un proyecto de inversión pública?",a:"Un proyecto financiado total o parcialmente con recursos del Estado, cuyo objetivo es mejorar el bienestar social."},
+  {cat:"Temas Complementarios",q:"¿Qué es el Sistema Nacional de Inversión Pública (SNIP)?",a:"Un sistema de los gobiernos para regular y evaluar los proyectos de inversión pública, asegurando que sean rentables socialmente."},
+  {cat:"Temas Complementarios",q:"¿Qué es la sostenibilidad de un proyecto?",a:"La capacidad del proyecto para seguir generando beneficios después de que la ayuda externa o la inversión inicial hayan terminado."},
+  {cat:"Temas Complementarios",q:"¿Qué es un proyecto de infraestructura social?",a:"Aquellos que proveen servicios básicos a la comunidad (hospitales, escuelas, sistemas de agua potable)."},
+  {cat:"Temas Complementarios",q:"¿Qué es una Alianza Público-Privada (APP)?",a:"Un modelo de colaboración entre el sector público y el privado para financiar, construir y operar proyectos de infraestructura o servicios públicos."},
+  {cat:"Temas Complementarios",q:"¿Qué es la evaluación ex-post?",a:"La evaluación que se realiza una vez que el proyecto ha concluido y está en operación, para verificar si se cumplieron los objetivos y aprender lecciones."},
+  {cat:"Temas Complementarios",q:"¿Qué es la perspectiva de género en la evaluación de proyectos?",a:"Un análisis que examina cómo los beneficios y costos del proyecto se distribuyen de manera diferente entre hombres y mujeres."},
+  {cat:"Temas Complementarios",q:"¿Qué es el triple resultado (Triple Bottom Line)?",a:"Un marco de evaluación que considera tres dimensiones: económica (profit), social (people) y ambiental (planet)."},
+  {cat:"Temas Complementarios",q:"¿Qué es la economía circular aplicada a proyectos?",a:"Un enfoque que busca que los proyectos minimicen el uso de recursos y la generación de residuos, reutilizando y reciclando materiales."},
+  {cat:"Temas Complementarios",q:"¿Por qué es importante la gestión de los interesados (stakeholders) en un proyecto?",a:"Porque son todas las personas o entidades afectadas o que pueden afectar el proyecto. Identificarlos y gestionar sus expectativas es clave para el éxito."},
+  {cat:"Temas Complementarios",q:"¿Qué es la innovación en proyectos?",a:"La introducción de nuevas ideas, productos, procesos o modelos de negocio que generan valor adicional."},
+  {cat:"Temas Complementarios",q:"¿Qué es un proyecto de emprendimiento?",a:"Un proyecto que busca crear un nuevo negocio o empresa, generalmente con alto componente de innovación y riesgo."},
+  {cat:"Temas Complementarios",q:"¿Qué es una startup?",a:"Una empresa emergente con alto potencial de crecimiento, generalmente basada en tecnología o modelos de negocio innovadores."},
+  {cat:"Temas Complementarios",q:"¿Qué es un modelo de negocio Canvas?",a:"Una herramienta visual que describe los 9 componentes clave de un modelo de negocio (propuesta de valor, clientes, canales, etc.)."},
+  {cat:"Temas Complementarios",q:"¿Qué es la transformación digital en proyectos?",a:"La incorporación de tecnologías digitales para mejorar procesos, productos y modelos de negocio."},
+  {cat:"Temas Complementarios",q:"¿Qué es la huella de carbono de un proyecto?",a:"La cantidad total de gases de efecto invernadero emitidos directa o indirectamente por el proyecto."},
+  {cat:"Temas Complementarios",q:"¿Qué es la responsabilidad social en proyectos?",a:"El compromiso de gestionar el proyecto considerando su impacto en la sociedad, el medio ambiente y los grupos de interés."},
+  {cat:"Temas Complementarios",q:"¿Qué es un proyecto verde?",a:"Aquel que busca generar beneficios ambientales o minimizar el impacto ecológico (energías renovables, reciclaje)."},
+  {cat:"Temas Complementarios",q:"¿Qué es el financiamiento climático?",a:"Los recursos destinados a proyectos que reducen emisiones o ayudan a adaptarse al cambio climático."},
+  {cat:"Temas Complementarios",q:"¿Qué son los ODS y su relación con los proyectos?",a:"Los Objetivos de Desarrollo Sostenible de la ONU; los proyectos pueden alinearse con ellos para generar impacto social y ambiental."},
+  {cat:"Temas Complementarios",q:"¿Qué es la ética en la evaluación de proyectos?",a:"El conjunto de principios que garantizan transparencia, honestidad e imparcialidad en el análisis y la toma de decisiones."},
+  {cat:"Temas Complementarios",q:"¿Qué es la gobernanza de proyectos?",a:"El marco de autoridad, responsabilidad y control que guía la toma de decisiones en el proyecto."},
+  {cat:"Temas Complementarios",q:"¿Qué es un PMO (Oficina de Gestión de Proyectos)?",a:"Una unidad organizacional que estandariza los procesos de gestión de proyectos y provee apoyo a los gerentes."},
+  {cat:"Temas Complementarios",q:"¿Qué es la madurez en gestión de proyectos?",a:"El grado de desarrollo de las capacidades organizacionales para gestionar proyectos de manera eficaz y consistente."},
+  {cat:"Temas Complementarios",q:"¿Qué es un proyecto multipropósito?",a:"Aquel que persigue varios objetivos simultáneamente (por ejemplo, una represa que genera energía, controla inundaciones y provee agua)."},
+  {cat:"Temas Complementarios",q:"¿Qué es la evaluación de programas?",a:"El análisis del conjunto de proyectos que conforman un programa, para valorar su coherencia y resultados globales."},
+  {cat:"Temas Complementarios",q:"¿Qué es el enfoque de marco lógico en proyectos sociales?",a:"Una metodología que organiza los objetivos, indicadores, medios de verificación y supuestos de un proyecto social en una matriz."},
+  {cat:"Temas Complementarios",q:"¿Qué es la teoría de restricciones aplicada a proyectos?",a:"Un enfoque que identifica y gestiona el recurso limitante (cuello de botella) que determina el ritmo del proyecto."},
+  {cat:"Temas Complementarios",q:"¿Qué es el método Kanban en proyectos?",a:"Un sistema visual de gestión del trabajo que limita el trabajo en curso y optimiza el flujo de tareas."},
+  {cat:"Temas Complementarios",q:"¿Qué es Scrum?",a:"Un marco ágil de gestión de proyectos que organiza el trabajo en iteraciones cortas (sprints) con equipos autoorganizados."}
+];
+
+/* ============================================================
+   SISTEMA DE VOZ
+   ============================================================ */
+const synth = window.speechSynthesis;
+const voiceSelect = document.getElementById('voiceSelect');
+const speedRange = document.getElementById('speedRange');
+const speedVal = document.getElementById('speedVal');
+const autoSpeakToggle = document.getElementById('autoSpeakToggle');
+const stopSpeakBtn = document.getElementById('stopSpeakBtn');
+const voiceWarning = document.getElementById('voiceWarning');
+
+let availableVoices = [];
+
+function loadVoices() {
+  availableVoices = synth.getVoices();
+  const spanishVoices = availableVoices.filter(v => v.lang.toLowerCase().startsWith('es'));
+  voiceSelect.innerHTML = '';
+  if (spanishVoices.length === 0) {
+    voiceWarning.textContent = '⚠️ No se detectaron voces en español.';
+    availableVoices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      voiceSelect.appendChild(opt);
+    });
+  } else {
+    voiceWarning.textContent = '';
+    spanishVoices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      voiceSelect.appendChild(opt);
+    });
+  }
+}
+
+synth.onvoiceschanged = loadVoices;
+if (synth.getVoices().length > 0) loadVoices();
+setTimeout(loadVoices, 300);
+
+speedRange.addEventListener('input', () => {
+  speedVal.textContent = parseFloat(speedRange.value).toFixed(1) + 'x';
+});
+
+stopSpeakBtn.addEventListener('click', () => {
+  synth.cancel();
+  document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
+});
+
+function speakText(text, buttonEl) {
+  synth.cancel();
+  document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
+  if (!text) return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  const selectedVoiceName = voiceSelect.value;
+  const selectedVoice = availableVoices.find(v => v.name === selectedVoiceName);
+  if (selectedVoice) utterance.voice = selectedVoice;
+  utterance.lang = selectedVoice ? selectedVoice.lang : 'es-ES';
+  utterance.rate = parseFloat(speedRange.value);
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  if (buttonEl) buttonEl.classList.add('speaking');
+  utterance.onend = () => { if (buttonEl) buttonEl.classList.remove('speaking'); };
+  utterance.onerror = () => { if (buttonEl) buttonEl.classList.remove('speaking'); };
+  synth.speak(utterance);
+}
+
+/* ============================================================
+   LÓGICA DE LA APLICACIÓN
+   ============================================================ */
+const grid = document.getElementById('grid');
+const categoriesEl = document.getElementById('categories');
+const statsEl = document.getElementById('stats');
+const themeToggle = document.getElementById('themeToggle');
+const footerCount = document.getElementById('footerCount');
+const searchBox = document.getElementById('searchBox');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const resetBtn = document.getElementById('resetBtn');
+const shuffleBtn = document.getElementById('shuffleBtn');
+
+let currentCategory = 'Todas';
+let searchTerm = '';
+let knownCards = new Set(JSON.parse(localStorage.getItem('knownCards') || '[]'));
+let unknownCards = new Set(JSON.parse(localStorage.getItem('unknownCards') || '[]'));
+
+const categories = ['Todas', ...new Set(FLASHCARDS.map(f => f.cat))];
+
+function saveProgress() {
+  localStorage.setItem('knownCards', JSON.stringify([...knownCards]));
+  localStorage.setItem('unknownCards', JSON.stringify([...unknownCards]));
+}
+
+function updateProgress() {
+  const total = FLASHCARDS.length;
+  const done = knownCards.size;
+  const pct = (done / total) * 100;
+  progressFill.style.width = pct + '%';
+  progressText.textContent = `${done} / ${total} dominadas`;
+}
+
+function renderCategories() {
+  categoriesEl.innerHTML = '';
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat === currentCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => {
+      currentCategory = cat;
+      renderCategories();
+      renderCards();
+    };
+    categoriesEl.appendChild(btn);
+  });
+}
+
+function renderCards() {
+  let filtered = currentCategory === 'Todas'
+    ? FLASHCARDS.map((f, i) => ({ ...f, id: i }))
+    : FLASHCARDS.map((f, i) => ({ ...f, id: i })).filter(f => f.cat === currentCategory);
+
+  if (searchTerm.trim()) {
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(f =>
+      f.q.toLowerCase().includes(term) || f.a.toLowerCase().includes(term)
+    );
+  }
+
+  grid.innerHTML = '';
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="no-results">No se encontraron flashcards con esos criterios 🔍</div>';
+    statsEl.textContent = 'Sin resultados';
+    return;
+  }
+
+  filtered.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'flashcard';
+    if (knownCards.has(f.id)) card.classList.add('known');
+    if (unknownCards.has(f.id)) card.classList.add('unknown');
+
+    card.innerHTML = `
+      <div class="card-actions">
+        <button class="btn-speak" title="Escuchar" data-action="speak">🔊</button>
+        <button class="btn-known" title="Ya la sé" data-action="known">✓</button>
+        <button class="btn-unknown" title="Necesito repasar" data-action="unknown">✗</button>
+      </div>
+      <div class="flashcard-inner">
+        <div class="flashcard-face flashcard-front">
+          <div class="card-num">#${f.id + 1} · ${f.cat}</div>
+          <div class="card-text">${f.q}</div>
+          <span class="card-cat">${f.cat}</span>
+          <span class="flip-hint">Clic para ver →</span>
+        </div>
+        <div class="flashcard-face flashcard-back">
+          <div class="card-num">#${f.id + 1} · Respuesta</div>
+          <div class="card-text">${f.a}</div>
+          <span class="card-cat">${f.cat}</span>
+          <span class="flip-hint">← Clic para volver</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.card-actions')) return;
+      card.classList.toggle('flipped');
+      if (autoSpeakToggle.checked) {
+        const isFlipped = card.classList.contains('flipped');
+        speakText(isFlipped ? f.a : f.q, card.querySelector('.btn-speak'));
+      }
+    });
+
+    card.querySelector('[data-action="speak"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isFlipped = card.classList.contains('flipped');
+      speakText(isFlipped ? f.a : f.q, e.currentTarget);
+    });
+
+    card.querySelector('[data-action="known"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (knownCards.has(f.id)) {
+        knownCards.delete(f.id);
+        card.classList.remove('known');
+      } else {
+        knownCards.add(f.id);
+        unknownCards.delete(f.id);
+        card.classList.add('known');
+        card.classList.remove('unknown');
+      }
+      saveProgress();
+      updateProgress();
+    });
+
+    card.querySelector('[data-action="unknown"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (unknownCards.has(f.id)) {
+        unknownCards.delete(f.id);
+        card.classList.remove('unknown');
+      } else {
+        unknownCards.add(f.id);
+        knownCards.delete(f.id);
+        card.classList.add('unknown');
+        card.classList.remove('known');
+      }
+      saveProgress();
+      updateProgress();
+    });
+
+    grid.appendChild(card);
+  });
+
+  statsEl.textContent = `Mostrando ${filtered.length} de ${FLASHCARDS.length} flashcards · Categoría: ${currentCategory}${searchTerm ? ` · Búsqueda: "${searchTerm}"` : ''}`;
+  footerCount.textContent = `${FLASHCARDS.length} flashcards en total`;
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  themeToggle.textContent = saved === 'dark' ? '☀️ Modo claro' : '🌙 Modo oscuro';
+}
+
+themeToggle.onclick = () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  themeToggle.textContent = next === 'dark' ? '☀️ Modo claro' : '🌙 Modo oscuro';
+};
+
+searchBox.addEventListener('input', (e) => {
+  searchTerm = e.target.value;
+  renderCards();
+});
+
+resetBtn.onclick = () => {
+  if (confirm('¿Reiniciar todo el progreso?')) {
+    knownCards.clear();
+    unknownCards.clear();
+    saveProgress();
+    updateProgress();
+    renderCards();
+  }
+};
+
+shuffleBtn.onclick = () => {
+  for (let i = FLASHCARDS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [FLASHCARDS[i], FLASHCARDS[j]] = [FLASHCARDS[j], FLASHCARDS[i]];
+  }
+  renderCards();
+};
+
+initTheme();
+renderCategories();
+renderCards();
+updateProgress();
+</script>
+</body>
+</html>
