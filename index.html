@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>300 Flashcards con Voz: Formulación y Evaluación de Proyectos</title>
+<title>300 Flashcards con Voz y Autoplay: Formulación y Evaluación de Proyectos</title>
 <style>
   :root {
     --bg: #f4f6fb;
@@ -19,6 +19,7 @@
     --success: #16a34a;
     --danger: #dc2626;
     --voice: #8b5cf6;
+    --active: #f59e0b;
   }
   [data-theme="dark"] {
     --bg: #0f1120;
@@ -34,6 +35,7 @@
     --success: #22c55e;
     --danger: #ef4444;
     --voice: #a78bfa;
+    --active: #fbbf24;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -54,7 +56,7 @@
     gap: 12px;
   }
   h1 {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     background: linear-gradient(90deg, var(--primary), #9b6bff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -71,6 +73,63 @@
     box-shadow: 0 2px 8px var(--shadow);
   }
   .theme-toggle:hover { transform: translateY(-2px); }
+
+  /* Panel de reproducción */
+  .player-panel {
+    max-width: 1300px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--primary), #9b6bff);
+    color: #fff;
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    box-shadow: 0 6px 20px rgba(74,91,247,0.35);
+  }
+  .player-panel h3 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .player-panel button {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .player-panel button:hover { background: rgba(255,255,255,0.35); }
+  .player-panel button.playing {
+    background: #fff;
+    color: var(--primary);
+  }
+  .player-panel label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .player-panel input[type="number"] {
+    width: 60px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  .player-status {
+    flex: 1;
+    min-width: 200px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.95;
+  }
 
   .voice-panel {
     max-width: 1300px;
@@ -107,14 +166,6 @@
     color: var(--primary);
     font-weight: 700;
   }
-  .toggle-auto {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    color: var(--text);
-  }
-  .toggle-auto input { cursor: pointer; }
 
   .toolbar {
     max-width: 1300px;
@@ -220,6 +271,15 @@
     height: 260px;
     cursor: pointer;
     position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .flashcard.active-card {
+    transform: scale(1.03);
+    z-index: 10;
+  }
+  .flashcard.active-card .flashcard-front,
+  .flashcard.active-card .flashcard-back {
+    box-shadow: 0 0 0 4px var(--active), 0 8px 30px rgba(245,158,11,0.4);
   }
   .flashcard-inner {
     position: relative;
@@ -335,9 +395,22 @@
 <body>
 
 <header>
-  <h1>🎴 300 Flashcards con Voz: Formulación y Evaluación de Proyectos</h1>
+  <h1>🎴 300 Flashcards con Voz y Reproducción Continua</h1>
   <button class="theme-toggle" id="themeToggle">🌙 Modo oscuro</button>
 </header>
+
+<!-- Panel de reproducción continua -->
+<div class="player-panel">
+  <h3>▶️ Reproducción continua</h3>
+  <button id="playBtn">▶️ Iniciar</button>
+  <button id="pauseBtn">⏸️ Pausar</button>
+  <button id="nextBtn">⏭️ Siguiente</button>
+  <button id="stopPlayerBtn">⏹️ Detener</button>
+  <label>⏱️ Espera entre tarjetas:
+    <input type="number" id="delayInput" value="2" min="1" max="15"> s
+  </label>
+  <div class="player-status" id="playerStatus">Detenido</div>
+</div>
 
 <div class="voice-panel">
   <label for="voiceSelect">🗣️ Voz:</label>
@@ -346,11 +419,6 @@
   <label for="speedRange">⚡ Velocidad:</label>
   <input type="range" id="speedRange" min="0.5" max="1.8" step="0.1" value="1">
   <span class="speed-val" id="speedVal">1.0x</span>
-
-  <label class="toggle-auto">
-    <input type="checkbox" id="autoSpeakToggle">
-    🎧 Leer al voltear
-  </label>
 
   <button class="btn-action" id="stopSpeakBtn">🔇 Detener voz</button>
   <span id="voiceWarning" class="voice-warning"></span>
@@ -710,7 +778,6 @@ const synth = window.speechSynthesis;
 const voiceSelect = document.getElementById('voiceSelect');
 const speedRange = document.getElementById('speedRange');
 const speedVal = document.getElementById('speedVal');
-const autoSpeakToggle = document.getElementById('autoSpeakToggle');
 const stopSpeakBtn = document.getElementById('stopSpeakBtn');
 const voiceWarning = document.getElementById('voiceWarning');
 
@@ -752,10 +819,10 @@ stopSpeakBtn.addEventListener('click', () => {
   document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
 });
 
-function speakText(text, buttonEl) {
+function speakText(text, buttonEl, onEnd) {
   synth.cancel();
   document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
-  if (!text) return;
+  if (!text) { if (onEnd) onEnd(); return; }
   const utterance = new SpeechSynthesisUtterance(text);
   const selectedVoiceName = voiceSelect.value;
   const selectedVoice = availableVoices.find(v => v.name === selectedVoiceName);
@@ -765,8 +832,14 @@ function speakText(text, buttonEl) {
   utterance.pitch = 1;
   utterance.volume = 1;
   if (buttonEl) buttonEl.classList.add('speaking');
-  utterance.onend = () => { if (buttonEl) buttonEl.classList.remove('speaking'); };
-  utterance.onerror = () => { if (buttonEl) buttonEl.classList.remove('speaking'); };
+  utterance.onend = () => {
+    if (buttonEl) buttonEl.classList.remove('speaking');
+    if (onEnd) onEnd();
+  };
+  utterance.onerror = () => {
+    if (buttonEl) buttonEl.classList.remove('speaking');
+    if (onEnd) onEnd();
+  };
   synth.speak(utterance);
 }
 
@@ -784,10 +857,24 @@ const progressText = document.getElementById('progressText');
 const resetBtn = document.getElementById('resetBtn');
 const shuffleBtn = document.getElementById('shuffleBtn');
 
+// Autoplay
+const playBtn = document.getElementById('playBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const nextBtn = document.getElementById('nextBtn');
+const stopPlayerBtn = document.getElementById('stopPlayerBtn');
+const delayInput = document.getElementById('delayInput');
+const playerStatus = document.getElementById('playerStatus');
+
 let currentCategory = 'Todas';
 let searchTerm = '';
 let knownCards = new Set(JSON.parse(localStorage.getItem('knownCards') || '[]'));
 let unknownCards = new Set(JSON.parse(localStorage.getItem('unknownCards') || '[]'));
+
+// Estado del reproductor
+let playerState = 'stopped'; // 'stopped' | 'playing' | 'paused'
+let currentPlayIndex = 0;
+let playerTimeout = null;
+let currentPlayingCardId = null;
 
 const categories = ['Todas', ...new Set(FLASHCARDS.map(f => f.cat))];
 
@@ -819,7 +906,7 @@ function renderCategories() {
   });
 }
 
-function renderCards() {
+function getFilteredCards() {
   let filtered = currentCategory === 'Todas'
     ? FLASHCARDS.map((f, i) => ({ ...f, id: i }))
     : FLASHCARDS.map((f, i) => ({ ...f, id: i })).filter(f => f.cat === currentCategory);
@@ -830,6 +917,11 @@ function renderCards() {
       f.q.toLowerCase().includes(term) || f.a.toLowerCase().includes(term)
     );
   }
+  return filtered;
+}
+
+function renderCards() {
+  const filtered = getFilteredCards();
 
   grid.innerHTML = '';
   if (filtered.length === 0) {
@@ -841,6 +933,7 @@ function renderCards() {
   filtered.forEach(f => {
     const card = document.createElement('div');
     card.className = 'flashcard';
+    card.dataset.cardId = f.id;
     if (knownCards.has(f.id)) card.classList.add('known');
     if (unknownCards.has(f.id)) card.classList.add('unknown');
 
@@ -869,10 +962,6 @@ function renderCards() {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.card-actions')) return;
       card.classList.toggle('flipped');
-      if (autoSpeakToggle.checked) {
-        const isFlipped = card.classList.contains('flipped');
-        speakText(isFlipped ? f.a : f.q, card.querySelector('.btn-speak'));
-      }
     });
 
     card.querySelector('[data-action="speak"]').addEventListener('click', (e) => {
@@ -916,8 +1005,180 @@ function renderCards() {
 
   statsEl.textContent = `Mostrando ${filtered.length} de ${FLASHCARDS.length} flashcards · Categoría: ${currentCategory}${searchTerm ? ` · Búsqueda: "${searchTerm}"` : ''}`;
   footerCount.textContent = `${FLASHCARDS.length} flashcards en total`;
+
+  // Si hay una tarjeta reproduciéndose, restaurar el resaltado
+  if (currentPlayingCardId !== null) {
+    const activeEl = grid.querySelector(`[data-card-id="${currentPlayingCardId}"]`);
+    if (activeEl) activeEl.classList.add('active-card');
+  }
 }
 
+/* ============================================================
+   REPRODUCTOR AUTOMÁTICO (AUTOPLAY)
+   ============================================================ */
+function getDelayMs() {
+  const secs = Math.max(1, Math.min(15, parseInt(delayInput.value) || 2));
+  return secs * 1000;
+}
+
+function updatePlayerStatus(text) {
+  playerStatus.textContent = text;
+}
+
+function clearHighlight() {
+  grid.querySelectorAll('.active-card').forEach(el => el.classList.remove('active-card'));
+}
+
+function scrollToCard(cardId) {
+  const el = grid.querySelector(`[data-card-id="${cardId}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('active-card');
+  }
+}
+
+function stopPlayer(clearIndex = true) {
+  playerState = 'stopped';
+  if (playerTimeout) { clearTimeout(playerTimeout); playerTimeout = null; }
+  synth.cancel();
+  document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
+  clearHighlight();
+  currentPlayingCardId = null;
+  if (clearIndex) currentPlayIndex = 0;
+  playBtn.classList.remove('playing');
+  playBtn.textContent = '▶️ Iniciar';
+  updatePlayerStatus('Detenido');
+}
+
+function pausePlayer() {
+  if (playerState !== 'playing') return;
+  playerState = 'paused';
+  if (playerTimeout) { clearTimeout(playerTimeout); playerTimeout = null; }
+  synth.cancel();
+  document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
+  updatePlayerStatus('⏸️ Pausado');
+}
+
+function resumePlayer() {
+  if (playerState !== 'paused') return;
+  playerState = 'playing';
+  playCurrentCard();
+}
+
+function playCurrentCard() {
+  if (playerState !== 'playing') return;
+
+  const filtered = getFilteredCards();
+  if (filtered.length === 0) {
+    stopPlayer();
+    return;
+  }
+
+  // Si el índice sale del rango, reiniciar
+  if (currentPlayIndex >= filtered.length) currentPlayIndex = 0;
+
+  const cardData = filtered[currentPlayIndex];
+  const cardEl = grid.querySelector(`[data-card-id="${cardData.id}"]`);
+
+  if (!cardEl) {
+    // La tarjeta no está visible (filtro cambió) → reiniciar
+    stopPlayer();
+    return;
+  }
+
+  // Marcar tarjeta activa y hacer scroll
+  clearHighlight();
+  cardEl.classList.add('active-card');
+  cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  currentPlayingCardId = cardData.id;
+
+  // Asegurar que empieza mostrando la pregunta
+  cardEl.classList.remove('flipped');
+
+  updatePlayerStatus(`🎧 Reproduciendo #${cardData.id + 1} de ${filtered.length}`);
+
+  // 1) Leer la pregunta
+  const speakBtn = cardEl.querySelector('.btn-speak');
+  speakText(cardData.q, speakBtn, () => {
+    if (playerState !== 'playing') return;
+
+    // 2) Esperar un poco antes de voltear
+    playerTimeout = setTimeout(() => {
+      if (playerState !== 'playing') return;
+
+      cardEl.classList.add('flipped');
+
+      // 3) Leer la respuesta
+      setTimeout(() => {
+        if (playerState !== 'playing') return;
+        speakText(cardData.a, speakBtn, () => {
+          if (playerState !== 'playing') return;
+
+          // 4) Esperar el delay configurado y pasar a la siguiente
+          playerTimeout = setTimeout(() => {
+            if (playerState !== 'playing') return;
+            currentPlayIndex++;
+            playCurrentCard();
+          }, getDelayMs());
+        });
+      }, 400);
+    }, 400);
+  });
+}
+
+playBtn.addEventListener('click', () => {
+  if (playerState === 'stopped') {
+    currentPlayIndex = 0;
+    playerState = 'playing';
+    playBtn.classList.add('playing');
+    playBtn.textContent = '▶️ Reproduciendo';
+    playCurrentCard();
+  } else if (playerState === 'paused') {
+    resumePlayer();
+    playBtn.classList.add('playing');
+    playBtn.textContent = '▶️ Reproduciendo';
+  }
+});
+
+pauseBtn.addEventListener('click', () => {
+  if (playerState === 'playing') {
+    pausePlayer();
+    playBtn.classList.remove('playing');
+    playBtn.textContent = '▶️ Reanudar';
+  }
+});
+
+nextBtn.addEventListener('click', () => {
+  const filtered = getFilteredCards();
+  if (filtered.length === 0) return;
+
+  // Detener lo actual
+  if (playerTimeout) { clearTimeout(playerTimeout); playerTimeout = null; }
+  synth.cancel();
+  document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
+
+  currentPlayIndex++;
+
+  if (playerState === 'playing') {
+    playCurrentCard();
+  } else if (playerState === 'stopped') {
+    // Solo resalta la siguiente sin reproducir
+    if (currentPlayIndex >= filtered.length) currentPlayIndex = 0;
+    const cardData = filtered[currentPlayIndex];
+    clearHighlight();
+    scrollToCard(cardData.id);
+    currentPlayingCardId = cardData.id;
+    updatePlayerStatus(`📌 Tarjeta #${cardData.id + 1}`);
+  }
+});
+
+stopPlayerBtn.addEventListener('click', () => {
+  stopPlayer();
+});
+
+/* ============================================================
+   TEMA, BÚSQUEDA, RESET, SHUFFLE
+   ============================================================ */
 function initTheme() {
   const saved = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
@@ -934,6 +1195,7 @@ themeToggle.onclick = () => {
 
 searchBox.addEventListener('input', (e) => {
   searchTerm = e.target.value;
+  stopPlayer();
   renderCards();
 });
 
@@ -948,6 +1210,7 @@ resetBtn.onclick = () => {
 };
 
 shuffleBtn.onclick = () => {
+  stopPlayer();
   for (let i = FLASHCARDS.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [FLASHCARDS[i], FLASHCARDS[j]] = [FLASHCARDS[j], FLASHCARDS[i]];
@@ -955,10 +1218,12 @@ shuffleBtn.onclick = () => {
   renderCards();
 };
 
+// Init
 initTheme();
 renderCategories();
 renderCards();
 updateProgress();
+updatePlayerStatus('Detenido');
 </script>
 </body>
 </html>
